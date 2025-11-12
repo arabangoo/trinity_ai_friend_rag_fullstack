@@ -81,9 +81,9 @@ copy .env.example .env
 
 **.env 파일 예시:**
 ```env
-GEMINI_API_KEY=your_gemini_api_key_here
-OPENAI_API_KEY=your_openai_api_key_here  # 선택
-ANTHROPIC_API_KEY=your_anthropic_api_key_here  # 선택
+OPENAI_API_KEY=실제 GPT API 키 기입
+ANTHROPIC_API_KEY=실제 클로드 API 키 기입
+GEMINI_API_KEY=실제 제미나이 API 키 기입
 ```
 
 #### 프론트엔드 설정
