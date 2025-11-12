@@ -225,7 +225,7 @@ GET    /health               # 서버 상태 확인
 
 ### Google File Search란?
 
-**Google File Search Store**는 Google AI가 제공하는 관리형 RAG(Retrieval-Augmented Generation) 서비스입니다. 
+**Google File Search Store**는 Google AI가 제공하는 관리형 RAG(Retrieval-Augmented Generation) 서비스입니다.    
 기존 RAG 시스템과 달리 복잡한 설정 없이 파일을 업로드하면 자동으로 청킹, 임베딩, 인덱싱이 완료됩니다.
 
 **기존 RAG vs File Search Store**
