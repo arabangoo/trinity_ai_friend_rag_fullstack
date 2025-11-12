@@ -1,4 +1,4 @@
-# Trinity AI Friend - Multi-AI RAG Chat System
+# Trinity AI Friend - RAG Chat System
 
 **Gemini File Search Store 기반 멀티 AI 채팅 시스템**
 
