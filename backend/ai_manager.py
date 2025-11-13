@@ -169,11 +169,11 @@ class AIManager:
                 response = await self.openai_client.chat.completions.create(
                     model="gpt-4o",
                     messages=[
-                        {"role": "system", "content": "당신은 젊고 스마트한 남자 AI 어시스턴트입니다. 말투는 현대적이고 똑부러지며, 간결하고 명확하게 답변합니다. '~습니다', '~입니다' 같은 딱딱한 표현보다는 '~네요', '~예요', '~거든요' 같은 자연스러운 구어체를 사용하세요. 전문적이지만 친근하게, 자신감 있게 답변하세요."},
+                        {"role": "system", "content": "당신은 젊고 스마트한 남자 AI 어시스턴트입니다. 말투는 젊은 박사처럼 현대적이고 똑부러지며 명확하게 답변합니다. '~습니다', '~입니다' 같은 딱딱한 표현보다는 '~네요', '~예요', '~거든요' 같은 자연스러운 구어체를 사용하세요. 전문적이지만 친근하게, 자신감 있게 답변하세요."},
                         {"role": "user", "content": message}
                     ],
                     temperature=0.7,
-                    max_tokens=2000
+                    max_tokens=3000
                 )
                 return response.choices[0].message.content
             except Exception as e:
@@ -203,11 +203,11 @@ class AIManager:
                 stream = await self.openai_client.chat.completions.create(
                     model="gpt-4o",
                     messages=[
-                        {"role": "system", "content": "당신은 젊고 스마트한 남자 AI 어시스턴트입니다. 말투는 현대적이고 똑부러지며, 간결하고 명확하게 답변합니다. '~습니다', '~입니다' 같은 딱딱한 표현보다는 '~네요', '~예요', '~거든요' 같은 자연스러운 구어체를 사용하세요. 전문적이지만 친근하게, 자신감 있게 답변하세요."},
+                        {"role": "system", "content": "당신은 젊고 스마트한 남자 AI 어시스턴트입니다. 말투는 젊은 박사처럼 현대적이고 똑부러지며 명확하게 답변합니다. '~습니다', '~입니다' 같은 딱딱한 표현보다는 '~네요', '~예요', '~거든요' 같은 자연스러운 구어체를 사용하세요. 전문적이지만 친근하게, 자신감 있게 답변하세요."},
                         {"role": "user", "content": message}
                     ],
                     temperature=0.7,
-                    max_tokens=2000,
+                    max_tokens=3000,
                     stream=True
                 )
 
@@ -242,7 +242,7 @@ class AIManager:
             try:
                 response = await self.anthropic_client.messages.create(
                     model="claude-sonnet-4-20250514",
-                    max_tokens=2000,
+                    max_tokens=3000,
                     temperature=0.7,
                     system="당신은 젊고 활기찬 여자 AI 어시스턴트입니다. 밝고 긍정적인 에너지를 가지고 있으며, 이모티콘(😊, ✨, 💡, 🎉, 👍 등)을 자연스럽게 사용합니다. 말투는 친근하고 다정하며 '~해요!', '~네요~', '~할게요!' 같은 밝은 어조를 사용하세요. 열정적이고 도움이 되고 싶어하는 성격을 표현하되, 과하지 않게 자연스럽게 답변하세요.",
                     messages=[
@@ -276,7 +276,7 @@ class AIManager:
             try:
                 async with self.anthropic_client.messages.stream(
                     model="claude-sonnet-4-20250514",
-                    max_tokens=2000,
+                    max_tokens=3000,
                     temperature=0.7,
                     system="당신은 젊고 활기찬 여자 AI 어시스턴트입니다. 밝고 긍정적인 에너지를 가지고 있으며, 이모티콘(😊, ✨, 💡, 🎉, 👍 등)을 자연스럽게 사용합니다. 말투는 친근하고 다정하며 '~해요!', '~네요~', '~할게요!' 같은 밝은 어조를 사용하세요. 열정적이고 도움이 되고 싶어하는 성격을 표현하되, 과하지 않게 자연스럽게 답변하세요.",
                     messages=[
@@ -331,7 +331,7 @@ class AIManager:
                             contents=full_message,
                             config=types.GenerateContentConfig(
                                 temperature=0.7,
-                                max_output_tokens=2000,
+                                max_output_tokens=3000,
                                 tools=[
                                     types.Tool(
                                         file_search=types.FileSearch(
@@ -351,7 +351,7 @@ class AIManager:
                             contents=full_message,
                             config=types.GenerateContentConfig(
                                 temperature=0.7,
-                                max_output_tokens=2000
+                                max_output_tokens=3000
                             )
                         )
                     )
@@ -400,7 +400,7 @@ class AIManager:
                             contents=full_message,
                             config=types.GenerateContentConfig(
                                 temperature=0.7,
-                                max_output_tokens=2000,
+                                max_output_tokens=3000,
                                 tools=[
                                     types.Tool(
                                         file_search=types.FileSearch(
@@ -420,7 +420,7 @@ class AIManager:
                             contents=full_message,
                             config=types.GenerateContentConfig(
                                 temperature=0.7,
-                                max_output_tokens=2000
+                                max_output_tokens=3000
                             )
                         )
                     )
