@@ -4,7 +4,7 @@
 
 3개의 최신 AI (GPT, Claude, Gemini)가 동시에 답변하며 파일 기반 지능형 RAG 검색을 제공합니다.
 
-<img width="1700" height="1000" alt="image_1" src="https://github.com/user-attachments/assets/d527dbc3-7855-43f8-b9b5-9ebab03eb048" />
+<img width="1800" height="1200" alt="image_1" src="https://github.com/user-attachments/assets/d527dbc3-7855-43f8-b9b5-9ebab03eb048" />
 
 ---
 
