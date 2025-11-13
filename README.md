@@ -175,9 +175,42 @@ Gemini File Search Store에 저장
 
 **멘션 없이 입력** 시 3개 AI 모두가 동시에 답변합니다.
 
-### 3. 대화 히스토리 초기화
+### 3. RAG 데이터 관리
 
-좌측 상단 **이전 대화 초기화** 버튼 클릭
+#### 📚 문서 관리 화면 접근
+화면 상단 **📚 문서 관리** 버튼을 클릭하여 업로드된 문서 목록을 확인할 수 있습니다.
+
+#### 문서 삭제
+1. **개별 문서 삭제**
+   - 문서 관리 모달에서 각 문서 옆의 **🗑️ 삭제** 버튼 클릭
+   - 확인 메시지 후 해당 문서가 File Search Store에서 영구 삭제됩니다
+
+2. **모든 문서 삭제**
+   - 문서 관리 모달 하단의 **🗑️ 모든 문서 삭제** 버튼 클릭
+   - RAG에 저장된 모든 문서가 삭제됩니다 (되돌릴 수 없음)
+
+#### 문서 수정 시나리오
+파일 내용이 업데이트된 경우:
+```
+1. 기존 문서 삭제 (📚 문서 관리 → 🗑️ 삭제)
+   ↓
+2. 새 버전 파일 업로드 (📎 버튼 → 파일 선택 → 전송)
+   ↓
+3. RAG가 새로운 내용으로 자동 업데이트
+```
+
+#### ⚠️ 주의사항
+- **삭제는 영구적**: 삭제된 문서는 복구할 수 없습니다
+- **RAG 즉시 반영**: 삭제/업로드 후 즉시 검색 결과에 반영됩니다
+- **File Search Store 동기화**: 모든 작업은 Google File Search Store와 실시간 동기화됩니다
+
+### 4. 대화 히스토리 초기화
+
+화면 상단 **🗑️ 대화 초기화** 버튼 클릭
+
+**차이점:**
+- **대화 초기화**: 채팅 메시지만 삭제 (RAG 문서는 유지)
+- **문서 삭제**: RAG 저장소의 문서 삭제 (채팅 메시지는 유지)
 
 ---
 
@@ -188,7 +221,8 @@ Gemini File Search Store에 저장
 ```http
 POST   /api/upload           # 파일 업로드 (File Search Store에 저장)
 GET    /api/documents        # 업로드된 문서 목록
-DELETE /api/documents/{id}   # 문서 삭제
+DELETE /api/documents/{id}   # 특정 문서 삭제
+DELETE /api/documents        # 모든 문서 삭제
 ```
 
 ### 채팅
@@ -225,7 +259,7 @@ GET    /health               # 서버 상태 확인
 
 ### Google File Search란?
 
-**Google File Search Store**는 Google AI가 제공하는 관리형 RAG(Retrieval-Augmented Generation) 서비스입니다.    
+**Google File Search Store**는 Google AI가 제공하는 관리형 RAG(Retrieval-Augmented Generation) 서비스입니다. 
 기존 RAG 시스템과 달리 복잡한 설정 없이 파일을 업로드하면 자동으로 청킹, 임베딩, 인덱싱이 완료됩니다.
 
 **기존 RAG vs File Search Store**
@@ -423,6 +457,134 @@ frontend/public/ai_image/
 1. `ai_image/` 폴더에 이미지 준비
 2. 같은 이름으로 교체
 3. 프론트엔드 재시작
+
+---
+
+## AI 모델 변경 매뉴얼
+
+각 AI의 사용 모델을 자유롭게 변경할 수 있습니다. [backend/ai_manager.py](backend/ai_manager.py)에서 `model=` 파라미터를 수정하세요.
+
+### 현재 사용 중인 모델
+
+| AI | 모델명 | 파일 위치 |
+|---|---|---|
+| **GPT** | `gpt-4o` | [ai_manager.py:170, 204](backend/ai_manager.py#L170) |
+| **Claude** | `claude-sonnet-4-20250514` | [ai_manager.py:244, 278](backend/ai_manager.py#L244) |
+| **Gemini** | `gemini-2.0-flash-exp` | [ai_manager.py:330, 350, 399, 419](backend/ai_manager.py#L330) |
+
+### 1. GPT 모델 변경
+
+**파일**: `backend/ai_manager.py`
+**수정 위치**: 2곳 (일반 응답, 스트리밍 응답)
+
+```python
+# Line 170: _get_gpt_response() 메서드
+response = await self.openai_client.chat.completions.create(
+    model="gpt-4o",  # ← 모델 변경시 수정
+    messages=[...]
+)
+
+# Line 204: _get_gpt_response_stream() 메서드
+stream = await self.openai_client.chat.completions.create(
+    model="gpt-4o",  # ← 모델 변경시 수정
+    messages=[...],
+    stream=True
+)
+```
+
+**사용 가능한 GPT 모델** ([OpenAI Models](https://platform.openai.com/docs/models))
+- `gpt-4o` - 최신 멀티모달 모델 (현재 설정)
+- `gpt-4o-mini` - 빠르고 저렴한 경량 버전
+- `gpt-4-turbo` - 128k 컨텍스트, 고성능
+- `o1` - 추론 특화 모델
+- `o1-mini` - 추론 특화 경량 버전
+
+### 2. Claude 모델 변경
+
+**파일**: `backend/ai_manager.py`
+**수정 위치**: 2곳 (일반 응답, 스트리밍 응답)
+
+```python
+# Line 244: _get_claude_response() 메서드
+response = await self.anthropic_client.messages.create(
+    model="claude-sonnet-4-20250514",  # ← 모델 변경시 수정
+    max_tokens=2000,
+    temperature=0.7,
+    system="...",
+    messages=[...]
+)
+
+# Line 278: _get_claude_response_stream() 메서드
+async with self.anthropic_client.messages.stream(
+    model="claude-sonnet-4-20250514",  # ← 모델 변경시 수정
+    max_tokens=2000,
+    messages=[...]
+) as stream:
+```
+
+**사용 가능한 Claude 모델** ([Anthropic Models](https://docs.anthropic.com/en/docs/about-claude/models))
+- `claude-sonnet-4-20250514` - Claude 4 Sonnet (현재 설정)
+- `claude-opus-4-20250514` - Claude 4 Opus (최고 성능)
+- `claude-3-5-sonnet-20241022` - Claude 3.5 Sonnet
+- `claude-3-opus-20240229` - Claude 3 Opus
+
+### 3. Gemini 모델 변경
+
+**파일**: `backend/ai_manager.py`
+**수정 위치**: 4곳 (일반 응답, 스트리밍 응답, 각각 File Search 있음/없음)
+
+```python
+# Line 330: _get_gemini_response() - File Search 사용
+response = await loop.run_in_executor(
+    None,
+    lambda: self.gemini_client.models.generate_content(
+        model="gemini-2.0-flash-exp",  # ← 모델 변경시 수정
+        contents=full_message,
+        config=types.GenerateContentConfig(...)
+    )
+)
+
+# Line 350: _get_gemini_response() - File Search 미사용
+response = await loop.run_in_executor(
+    None,
+    lambda: self.gemini_client.models.generate_content(
+        model="gemini-2.0-flash-exp",  # ← 모델 변경시 수정
+        contents=full_message,
+        config=types.GenerateContentConfig(...)
+    )
+)
+
+# Line 399, 419: _get_gemini_response_stream() - 위와 동일하게 2곳
+```
+
+**사용 가능한 Gemini 모델** ([Google AI Models](https://ai.google.dev/gemini-api/docs/models))
+- `gemini-2.0-flash-exp` - Gemini 2.0 Flash Experimental (현재 설정)
+- `gemini-1.5-pro` - Gemini 1.5 Pro (높은 성능, 2M 컨텍스트)
+- `gemini-1.5-flash` - Gemini 1.5 Flash (빠르고 효율적)
+- `gemini-1.0-pro` - Gemini 1.0 Pro
+
+### 모델 변경 후 적용
+
+```bash
+# 백엔드만 재시작하면 됨 (프론트엔드 재시작 불필요)
+cd backend
+python main.py
+```
+
+### 주의사항
+
+1. **모든 위치 수정 필요**: 각 AI마다 일반/스트리밍 응답 메서드가 있으므로, 모든 위치에서 모델명을 동일하게 수정해야 합니다.
+2. **API 호환성 확인**: 변경하려는 모델이 현재 API 키로 접근 가능한지 확인하세요.
+3. **비용 확인**: 모델마다 토큰당 비용이 다르므로, 공식 문서에서 가격을 확인하세요.
+4. **컨텍스트 윈도우**: 모델마다 최대 입력 토큰 수가 다릅니다 (예: GPT-4o는 128k, Gemini 1.5 Pro는 2M).
+
+### 모델 성능 비교 팁
+
+다양한 모델을 테스트해보세요:
+- **빠른 응답 필요**: `gpt-4o-mini`, `gemini-1.5-flash`, `claude-3-5-sonnet`
+- **최고 성능 필요**: `o1`, `claude-opus-4`, `gemini-1.5-pro`
+- **비용 최적화**: `gpt-4o-mini`, `gemini-1.5-flash`
+- **긴 문서 처리**: `gemini-1.5-pro` (2M 컨텍스트)
 
 ---
 

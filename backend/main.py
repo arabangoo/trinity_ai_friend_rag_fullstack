@@ -332,6 +332,11 @@ async def delete_document(document_id: str):
     """문서 삭제"""
     return await file_search_manager.delete_document(document_id)
 
+@app.delete("/api/documents")
+async def clear_all_documents():
+    """모든 문서 삭제"""
+    return await file_search_manager.clear_all_documents()
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

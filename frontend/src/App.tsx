@@ -19,13 +19,23 @@ interface AIResponse {
   timestamp: string
 }
 
+interface Document {
+  name: string
+  display_name: string
+  uri: string
+  mime_type: string
+  upload_time: number
+}
+
 function App() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [uploadProgress, setUploadProgress] = useState<string>('')
-  
+  const [showDocuments, setShowDocuments] = useState(false)
+  const [documents, setDocuments] = useState<Document[]>([])
+
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -132,6 +142,60 @@ function App() {
     }
   }
 
+  // 문서 목록 불러오기
+  const loadDocuments = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/documents`)
+      if (response.data.success) {
+        setDocuments(response.data.documents)
+      }
+    } catch (error) {
+      console.error('Load documents error:', error)
+    }
+  }
+
+  // 문서 삭제
+  const handleDeleteDocument = async (documentId: string) => {
+    if (!confirm('이 문서를 삭제하시겠습니까?')) return
+
+    try {
+      await axios.delete(`${API_BASE_URL}/api/documents/${encodeURIComponent(documentId)}`)
+      setMessages(prev => [...prev, {
+        type: 'system',
+        content: `🗑️ 문서 삭제 완료`,
+        timestamp: new Date().toISOString()
+      }])
+      loadDocuments()
+    } catch (error: any) {
+      console.error('Delete document error:', error)
+      alert(`문서 삭제 실패: ${error.response?.data?.error || error.message}`)
+    }
+  }
+
+  // 모든 문서 삭제
+  const handleClearAllDocuments = async () => {
+    if (!confirm('모든 문서를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.')) return
+
+    try {
+      const response = await axios.delete(`${API_BASE_URL}/api/documents`)
+      setMessages(prev => [...prev, {
+        type: 'system',
+        content: `🗑️ ${response.data.message}`,
+        timestamp: new Date().toISOString()
+      }])
+      loadDocuments()
+    } catch (error: any) {
+      console.error('Clear all documents error:', error)
+      alert(`문서 삭제 실패: ${error.response?.data?.error || error.message}`)
+    }
+  }
+
+  // 문서 관리 모달 열기
+  const handleOpenDocuments = () => {
+    loadDocuments()
+    setShowDocuments(true)
+  }
+
   // AI 이미지 매핑
   const getAIImage = (aiName: string) => {
     const imageMap: Record<string, string> = {
@@ -157,10 +221,58 @@ function App() {
       {/* 헤더 */}
       <header className="header">
         <h1>✨ Trinity AI Friend</h1>
-        <button onClick={handleClearHistory} className="clear-btn">
-          🗑️ 대화 초기화
-        </button>
+        <div className="header-buttons">
+          <button onClick={handleOpenDocuments} className="docs-btn">
+            📚 문서 관리
+          </button>
+          <button onClick={handleClearHistory} className="clear-btn">
+            🗑️ 대화 초기화
+          </button>
+        </div>
       </header>
+
+      {/* 문서 관리 모달 */}
+      {showDocuments && (
+        <div className="modal-overlay" onClick={() => setShowDocuments(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>📚 업로드된 문서</h2>
+              <button onClick={() => setShowDocuments(false)} className="modal-close">❌</button>
+            </div>
+            <div className="modal-body">
+              {documents.length === 0 ? (
+                <p className="no-documents">업로드된 문서가 없습니다.</p>
+              ) : (
+                <>
+                  <div className="documents-list">
+                    {documents.map((doc, idx) => (
+                      <div key={idx} className="document-item">
+                        <div className="document-info">
+                          <div className="document-name">📄 {doc.display_name}</div>
+                          <div className="document-meta">
+                            {doc.mime_type} • {new Date(doc.upload_time * 1000).toLocaleString('ko-KR')}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleDeleteDocument(doc.name)}
+                          className="delete-doc-btn"
+                        >
+                          🗑️ 삭제
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="modal-footer">
+                    <button onClick={handleClearAllDocuments} className="clear-all-btn">
+                      🗑️ 모든 문서 삭제
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="main-content">
         {/* 왼쪽: AI 응답 패널들 */}

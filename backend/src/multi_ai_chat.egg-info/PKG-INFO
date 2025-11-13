@@ -1,0 +1,22 @@
+Metadata-Version: 2.4
+Name: multi-ai-chat
+Version: 2.0.0
+Summary: Multi-AI Chat System with Gemini File Search RAG
+Author-email: Multi-AI Team <team@multi-ai.com>
+License: MIT
+Requires-Python: <4.0,>=3.11
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: fastapi>=0.115.0
+Requires-Dist: uvicorn>=0.32.0
+Requires-Dist: python-dotenv>=1.0.1
+Requires-Dist: google-genai>=1.0.0
+Requires-Dist: openai>=1.58.0
+Requires-Dist: anthropic>=0.42.0
+Requires-Dist: httpx>=0.27.0
+Requires-Dist: Pillow>=10.0.0
+Requires-Dist: python-multipart>=0.0.6
+Provides-Extra: dev
+Requires-Dist: mypy>=1.11.1; extra == "dev"
+Requires-Dist: ruff>=0.6.1; extra == "dev"
+Dynamic: license-file
