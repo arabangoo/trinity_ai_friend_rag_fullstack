@@ -77,7 +77,6 @@ venv\Scripts\activate  # Windows
 pip install -e .
 
 # 환경 변수 설정
-copy .env.example .env
 # .env 파일에 아래와 같이 API 키 입력
 ```
 
@@ -510,7 +509,7 @@ stream = await self.openai_client.chat.completions.create(
 # Line 244: _get_claude_response() 메서드
 response = await self.anthropic_client.messages.create(
     model="claude-sonnet-4-20250514",  # ← 모델 변경시 수정
-    max_tokens=2000,
+    max_tokens=3000,
     temperature=0.7,
     system="...",
     messages=[...]
@@ -519,7 +518,7 @@ response = await self.anthropic_client.messages.create(
 # Line 278: _get_claude_response_stream() 메서드
 async with self.anthropic_client.messages.stream(
     model="claude-sonnet-4-20250514",  # ← 모델 변경시 수정
-    max_tokens=2000,
+    max_tokens=3000,
     messages=[...]
 ) as stream:
 ```
