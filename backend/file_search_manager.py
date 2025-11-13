@@ -86,9 +86,7 @@ class FileSearchManager:
             self.store = await loop.run_in_executor(
                 None,
                 lambda: self.client.file_search_stores.create(
-                    config=types.CreateFileSearchStoreConfig(
-                        display_name="RAG File Search Store"
-                    )
+                    config={'display_name': 'RAG File Search Store'}
                 )
             )
             self.store_name = self.store.name
@@ -119,22 +117,34 @@ class FileSearchManager:
                 None,
                 lambda: self.client.file_search_stores.upload_to_file_search_store(
                     file=file_path,
-                    file_search_store_name=self.store_name
+                    file_search_store_name=self.store_name,
+                    config={'display_name': display_name}
                 )
             )
 
             # 업로드 완료 대기
-            uploaded_file = operation.result()
+            print(f"⏳ 파일 처리 중 (청킹, 임베딩, 인덱싱)...")
+            while not operation.done:
+                await asyncio.sleep(2)
+                operation = await loop.run_in_executor(
+                    None,
+                    lambda: self.client.operations.get(operation)
+                )
+
+            # 완료된 operation에서 파일 정보 가져오기
+            response = operation.response
 
             # 파일 정보 저장
             file_info = {
-                'name': uploaded_file.name,
+                'name': response.document_name,  # 문서의 전체 경로
                 'display_name': display_name,
-                'uri': uploaded_file.uri,
-                'mime_type': uploaded_file.mime_type,
-                'state': str(uploaded_file.state),
+                'uri': response.document_name,  # 문서 이름이 URI 역할
+                'mime_type': 'application/pdf',  # 기본값
+                'state': 'ACTIVE',
                 'upload_time': time.time()
             }
+
+            print(f"✅ File Search Store에 파일 업로드 완료: {response.document_name}")
 
             # 메타데이터에 추가
             if 'uploaded_files' not in self.metadata:
@@ -142,14 +152,11 @@ class FileSearchManager:
             self.metadata['uploaded_files'].append(file_info)
             self._save_metadata()
 
-            print(f"✅ File Search Store에 파일 업로드 완료: {uploaded_file.name}")
-            print(f"   상태: {uploaded_file.state}")
-
             return {
-                "file_name": uploaded_file.name,
+                "file_name": response.document_name,
                 "display_name": display_name,
-                "uri": uploaded_file.uri,
-                "state": str(uploaded_file.state)
+                "uri": response.document_name,
+                "state": "ACTIVE"
             }
 
         except Exception as e:
@@ -158,9 +165,10 @@ class FileSearchManager:
     async def get_context(self, query: str, max_results: int = 5) -> Optional[Dict[str, Any]]:
         """
         File Search Store를 사용하여 쿼리와 관련된 컨텍스트 반환
+        Gemini를 사용해 실제로 검색하고 텍스트 추출
 
         Returns:
-            컨텍스트 정보 (store_name과 메타데이터 포함)
+            컨텍스트 정보 (store_name, 검색된 텍스트 포함)
         """
         try:
             # Store 초기화 확인
@@ -170,17 +178,52 @@ class FileSearchManager:
             if not uploaded_files:
                 return None
 
-            # File Search Store 정보 반환
-            # (실제 검색은 AI 호출 시 Gemini가 자동으로 수행)
+            # Gemini를 사용해 File Search 수행하고 관련 텍스트 추출
+            loop = asyncio.get_event_loop()
+
+            search_query = f"다음 질문과 관련된 정보를 문서에서 찾아서 원문 그대로 인용해주세요: {query}"
+
+            response = await loop.run_in_executor(
+                None,
+                lambda: self.client.models.generate_content(
+                    model="gemini-2.5-flash",
+                    contents=search_query,
+                    config=types.GenerateContentConfig(
+                        temperature=0.1,  # 낮은 temperature로 정확한 인용
+                        max_output_tokens=2000,
+                        tools=[
+                            types.Tool(
+                                file_search=types.FileSearch(
+                                    file_search_store_names=[self.store_name]
+                                )
+                            )
+                        ]
+                    )
+                )
+            )
+
+            # 검색 결과 텍스트 추출
+            searched_text = response.text if hasattr(response, 'text') and response.text else ""
+
+            print(f"🔍 RAG 검색 완료 (쿼리: {query[:50]}...)")
+            print(f"📝 추출된 컨텍스트: {searched_text[:200]}...")
+
             return {
                 "store_name": self.store_name,
                 "file_count": len(uploaded_files),
-                "files": uploaded_files[-max_results:]
+                "files": uploaded_files[-max_results:],
+                "searched_context": searched_text  # 검색된 텍스트 추가
             }
 
         except Exception as e:
             print(f"⚠️ 컨텍스트 검색 오류: {e}")
-            return None
+            # 오류 시에도 store_name은 반환 (Gemini가 직접 검색할 수 있도록)
+            return {
+                "store_name": self.store_name,
+                "file_count": len(uploaded_files),
+                "files": uploaded_files[-max_results:],
+                "searched_context": None
+            }
     
     def get_uploaded_files(self) -> List[Dict[str, Any]]:
         """업로드된 파일 목록 반환"""

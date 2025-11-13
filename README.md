@@ -4,27 +4,69 @@
 
 3개의 최신 AI (GPT, Claude, Gemini)가 동시에 답변하며 파일 기반 지능형 RAG 검색을 제공합니다.
 
-<img width="2000" height="1400" alt="image_1" src="https://github.com/user-attachments/assets/b6fcad39-a28f-4607-bd92-57fbdd1083ae" />
+## 🎯 핵심 특징
+
+- 🤖 **멀티 AI 동시 응답**: GPT, Claude, Gemini가 같은 질문에 각자의 스타일로 답변
+- 📚 **자동 RAG 구축**: 파일 업로드만으로 자동 청킹, 임베딩, 인덱싱 완료
+- 🔄 **컨텍스트 공유**: Gemini가 검색한 RAG 결과를 모든 AI가 활용
+- 💬 **개성 있는 AI**: 각 AI가 독특한 캐릭터와 말투로 답변
+- ⚡ **실시간 스트리밍**: SSE 방식으로 답변이 실시간으로 생성
+- 🎨 **완전 커스터마이징**: AI 모델, 개성, 프롬프트 모두 변경 가능
+
+## 🚀 빠른 시작
+
+```bash
+# 1. 저장소 클론
+git clone <repository-url>
+cd <folder-name>
+
+# 2. 백엔드 설정 및 실행
+cd backend
+python -m venv venv
+venv\Scripts\activate  # Windows
+pip install -e .
+# .env 파일에 API 키 설정
+python main.py
+
+# 3. 프론트엔드 실행 (새 터미널)
+cd frontend
+npm install
+npm run dev
+
+# 4. 브라우저에서 http://localhost:5173/app/ 접속
+```
+
+**필수 요구사항:**
+- Python 3.11+
+- Node.js 18+
+- Gemini API Key (AI 호출 / File Search Store 사용)
+- OpenAI API Key (AI 호출)
+- Anthropic API Key (AI 호출)
 
 ---
 
 ## 주요 기능
 
 ### 1. 멀티 AI 동시 응답
-- **GPT-4o** (OpenAI)
-- **Claude Sonnet 4** (Anthropic)
-- **Gemini 2.0 Flash** (Google)
+- **GPT-4o** (OpenAI) - 젊고 스마트한 남성 말투
+- **Claude Sonnet 4** (Anthropic) - 활기찬 여성 말투
+- **Gemini 2.5 Flash** (Google) - 지혜로운 노인 말투
+- **랜덤 선택**: 1~3개 AI가 랜덤하게 선택되어 동시 답변
+- **AI 지정**: `@GPT`, `@Claude`, `@Gemini` 멘션으로 특정 AI 호출 가능
 
 ### 2. Gemini File Search Store 기반 RAG
 - ✅ **자동 청킹 및 임베딩** (무료 제공, 코드 불필요)
 - ✅ **시맨틱 검색** (의미 기반 문서 검색)
 - ✅ **영구 데이터 저장** (재시작 후에도 유지)
-- ✅ **비용 최적화** (저장소 유지비 무료)
+- ✅ **비용 최적화** (저장소 유지비 무료, 인덱싱만 $0.15/1M 토큰)
+- ✅ **멀티 AI 공유**: Gemini가 검색한 결과를 GPT/Claude도 활용
+- ✅ **문서 관리**: 웹 UI에서 문서 업로드/삭제 가능
 
-### 3. 실시간 멀티 AI 체험
-- 3개 AI가 동시에 답변 생성
-- 각 AI의 독특한 스타일 비교
-- 업로드된 파일 기반 정확한 답변
+### 3. 실시간 스트리밍 응답
+- Server-Sent Events (SSE)로 실시간 스트리밍
+- 3개 AI가 동시에 답변 생성 (병렬 처리)
+- 각 AI의 독특한 개성과 말투 체험
+- 업로드된 파일 기반 정확한 RAG 답변
 
 ---
 
@@ -55,11 +97,27 @@ gemini_file_search_rag_fullstack/
 ### 1. 사전 요구사항
 
 - **Node.js** 18+
-- **Python** 3.12+
+- **Python** 3.11+
 - **API 키** (최소 1개 필요)
   - [OpenAI API Key](https://platform.openai.com/api-keys) (선택)
   - [Anthropic API Key](https://console.anthropic.com/) (선택)
   - [Google Gemini API Key](https://aistudio.google.com/apikey) (필수)
+
+#### ⚠️ 중요: Google GenAI 버전 요구사항
+
+**File Search Store 기능을 사용하려면 `google-genai` 버전 1.50.0 이상이 필수입니다.**
+
+```bash
+# 버전 확인
+pip show google-genai
+
+# 1.50.0 미만이면 업그레이드
+pip install --upgrade google-genai
+```
+
+**문제 해결:**
+- ❌ `'Client' object has no attribute 'file_search_stores'` 에러가 발생하면 → 버전이 1.50.0 미만
+- ✅ 해결: `pip install --upgrade google-genai` 실행 후 백엔드 재시작
 
 ### 2. 설치
 
@@ -77,6 +135,7 @@ venv\Scripts\activate  # Windows
 pip install -e .
 
 # 환경 변수 설정
+copy .env.example .env
 # .env 파일에 아래와 같이 API 키 입력
 ```
 
@@ -292,22 +351,34 @@ GET    /health               # 서버 상태 확인
 - 서버 재시작 후에도 업로드된 파일 정보 유지
 - Store ID를 로컬에 보관하여 재사용 가능
 
-**4. 채팅 시 자동 검색 (RAG 실행)**
+**4. 채팅 시 자동 검색 (멀티 AI RAG 실행)**
 ```
 사용자 질문
     ↓
-Gemini API 호출 (File Search Tool 활성화)
+[1단계] Gemini가 File Search Store에서 검색
+    - File Search Tool 활성화
+    - 질문 분석 및 관련 키워드 추출
+    - 시맨틱 검색 수행
+    - 가장 관련성 높은 청크 5-10개 선택
+    - 관련 텍스트를 추출하여 반환
     ↓
-Gemini가 질문을 분석하여 관련 키워드 추출
+[2단계] 추출된 텍스트를 모든 AI에게 공유
+    - GPT: 추출된 텍스트를 프롬프트에 포함
+    - Claude: 추출된 텍스트를 프롬프트에 포함
+    - Gemini: 추출된 텍스트를 프롬프트에 포함
     ↓
-File Search Store에서 시맨틱 검색 수행
+[3단계] 1~3개 AI가 랜덤 선택되어 동시 답변 생성
+    - 모두 같은 RAG 컨텍스트 기반
+    - 각자의 개성과 말투로 답변
+    - 병렬 처리로 동시 응답
     ↓
-가장 관련성 높은 청크 5-10개 선택
-    ↓
-선택된 청크를 컨텍스트로 사용하여 답변 생성
-    ↓
-출처 정보와 함께 사용자에게 응답
+사용자에게 다양한 스타일의 답변 제공
 ```
+
+**핵심 특징:**
+- **단일 검색**: Gemini가 한 번만 검색하여 비용 절감
+- **컨텍스트 공유**: 모든 AI가 동일한 정보 기반으로 답변
+- **다양성 유지**: 각 AI의 독특한 말투와 관점으로 답변
 
 ### File Search의 핵심 장점
 
@@ -330,7 +401,8 @@ retriever = vectorstore.as_retriever()
 # File Search Store (간단한 코드)
 uploaded_file = client.file_search_stores.upload_to_file_search_store(
     file="document.pdf",
-    file_search_store_name=store_name
+    file_search_store_name=store_name,
+    config={'display_name': 'My Document'}
 )
 # 끝! 자동으로 청킹, 임베딩, 인덱싱 완료
 ```
@@ -394,6 +466,10 @@ POST /api/chat
 ```
 
 ### 기술 세부사항
+
+**필수 패키지 버전**
+- `google-genai` >= 1.50.0 (File Search Store 기능 필수)
+- Python >= 3.11
 
 **사용 모델**
 - 임베딩: `text-embedding-004` (768차원 벡터)
@@ -469,9 +545,11 @@ frontend/public/ai_image/
 
 | AI | 모델명 | 파일 위치 |
 |---|---|---|
-| **GPT** | `gpt-4o` | [ai_manager.py:170, 204](backend/ai_manager.py#L170) |
-| **Claude** | `claude-sonnet-4-20250514` | [ai_manager.py:244, 278](backend/ai_manager.py#L244) |
-| **Gemini** | `gemini-2.0-flash-exp` | [ai_manager.py:330, 350, 399, 419](backend/ai_manager.py#L330) |
+| **GPT** | `gpt-4o` | [ai_manager.py:182, 216](backend/ai_manager.py#L182) |
+| **Claude** | `claude-sonnet-4-20250514` | [ai_manager.py:256, 290](backend/ai_manager.py#L256) |
+| **Gemini** (일반) | `gemini-2.5-flash` | [ai_manager.py:362, 432](backend/ai_manager.py#L362) |
+| **Gemini** (RAG) | `gemini-2.5-flash` | [ai_manager.py:341, 411](backend/ai_manager.py#L341) |
+| **File Search** | `gemini-2.5-flash` | [file_search_manager.py:191](backend/file_search_manager.py#L191) |
 
 ### 1. GPT 모델 변경
 
@@ -509,7 +587,7 @@ stream = await self.openai_client.chat.completions.create(
 # Line 244: _get_claude_response() 메서드
 response = await self.anthropic_client.messages.create(
     model="claude-sonnet-4-20250514",  # ← 모델 변경시 수정
-    max_tokens=3000,
+    max_tokens=2000,
     temperature=0.7,
     system="...",
     messages=[...]
@@ -518,7 +596,7 @@ response = await self.anthropic_client.messages.create(
 # Line 278: _get_claude_response_stream() 메서드
 async with self.anthropic_client.messages.stream(
     model="claude-sonnet-4-20250514",  # ← 모델 변경시 수정
-    max_tokens=3000,
+    max_tokens=2000,
     messages=[...]
 ) as stream:
 ```
@@ -531,38 +609,55 @@ async with self.anthropic_client.messages.stream(
 
 ### 3. Gemini 모델 변경
 
-**파일**: `backend/ai_manager.py`
-**수정 위치**: 4곳 (일반 응답, 스트리밍 응답, 각각 File Search 있음/없음)
+**파일**: `backend/ai_manager.py`, `backend/file_search_manager.py`
+**수정 위치**: 5곳 (일반 응답, 스트리밍 응답, File Search 검색)
 
 ```python
-# Line 330: _get_gemini_response() - File Search 사용
+# ai_manager.py - Line 341: _get_gemini_response() - File Search 사용
 response = await loop.run_in_executor(
     None,
     lambda: self.gemini_client.models.generate_content(
-        model="gemini-2.0-flash-exp",  # ← 모델 변경시 수정
-        contents=full_message,
+        model="gemini-2.5-flash",  # ← 모델 변경시 수정
+        contents=message,
         config=types.GenerateContentConfig(...)
     )
 )
 
-# Line 350: _get_gemini_response() - File Search 미사용
+# ai_manager.py - Line 362: _get_gemini_response() - File Search 미사용
 response = await loop.run_in_executor(
     None,
     lambda: self.gemini_client.models.generate_content(
-        model="gemini-2.0-flash-exp",  # ← 모델 변경시 수정
-        contents=full_message,
+        model="gemini-2.5-flash",  # ← 모델 변경시 수정
+        contents=message,
         config=types.GenerateContentConfig(...)
     )
 )
 
-# Line 399, 419: _get_gemini_response_stream() - 위와 동일하게 2곳
+# ai_manager.py - Line 411, 432: _get_gemini_response_stream() - 위와 동일하게 2곳
+
+# file_search_manager.py - Line 191: get_context() - RAG 검색용
+response = await loop.run_in_executor(
+    None,
+    lambda: self.client.models.generate_content(
+        model="gemini-2.5-flash",  # ← RAG 검색도 동일 모델 사용
+        contents=search_query,
+        config=types.GenerateContentConfig(...)
+    )
+)
 ```
 
 **사용 가능한 Gemini 모델** ([Google AI Models](https://ai.google.dev/gemini-api/docs/models))
-- `gemini-2.0-flash-exp` - Gemini 2.0 Flash Experimental (현재 설정)
-- `gemini-1.5-pro` - Gemini 1.5 Pro (높은 성능, 2M 컨텍스트)
-- `gemini-1.5-flash` - Gemini 1.5 Flash (빠르고 효율적)
-- `gemini-1.0-pro` - Gemini 1.0 Pro
+- `gemini-2.5-flash` - Gemini 2.5 Flash (현재 설정, File Search 지원)
+- `gemini-2.5-pro` - Gemini 2.5 Pro (최고 성능, File Search 지원)
+- `gemini-1.5-pro` - Gemini 1.5 Pro (2M 컨텍스트, File Search 지원)
+- `gemini-1.5-flash` - Gemini 1.5 Flash (빠르고 효율적, File Search 지원)
+- ~~`gemini-2.0-flash-exp`~~ - ❌ File Search 미지원 (일반 채팅만 가능)
+- ~~`gemini-1.0-pro`~~ - ❌ File Search 미지원 (일반 채팅만 가능)
+
+**⚠️ 중요:**
+- **File Search 기능을 사용하려면** 반드시 위의 ✅ 표시된 모델 사용
+- RAG 없이 일반 채팅만 하는 경우 모든 Gemini 모델 사용 가능
+- `ai_manager.py`와 `file_search_manager.py` 모두에서 모델 변경 필요
 
 ### 모델 변경 후 적용
 
@@ -575,9 +670,11 @@ python main.py
 ### 주의사항
 
 1. **모든 위치 수정 필요**: 각 AI마다 일반/스트리밍 응답 메서드가 있으므로, 모든 위치에서 모델명을 동일하게 수정해야 합니다.
-2. **API 호환성 확인**: 변경하려는 모델이 현재 API 키로 접근 가능한지 확인하세요.
-3. **비용 확인**: 모델마다 토큰당 비용이 다르므로, 공식 문서에서 가격을 확인하세요.
-4. **컨텍스트 윈도우**: 모델마다 최대 입력 토큰 수가 다릅니다 (예: GPT-4o는 128k, Gemini 1.5 Pro는 2M).
+2. **Gemini 모델 주의**: Gemini는 5곳(`ai_manager.py` 4곳 + `file_search_manager.py` 1곳) 모두 수정 필요
+3. **File Search 호환성**: RAG 기능을 사용한다면 File Search 지원 모델만 선택 가능
+4. **API 호환성 확인**: 변경하려는 모델이 현재 API 키로 접근 가능한지 확인하세요.
+5. **비용 확인**: 모델마다 토큰당 비용이 다르므로, 공식 문서에서 가격을 확인하세요.
+6. **컨텍스트 윈도우**: 모델마다 최대 입력 토큰 수가 다릅니다 (예: GPT-4o는 128k, Gemini 1.5 Pro는 2M).
 
 ### 모델 성능 비교 팁
 
@@ -684,9 +781,138 @@ python main.py
 
 ---
 
-## 주요 문제 해결
+## 트러블슈팅 가이드
 
-### 1. File Search Store가 초기화되지 않음
+이 섹션은 실제 개발 과정에서 발생했던 주요 이슈와 해결 방법을 정리한 것입니다. 같은 문제를 겪는 다른 개발자들에게 도움이 되길 바랍니다.
+
+---
+
+### ⚠️ 필수 확인 사항
+
+#### 1. Google GenAI SDK 버전 문제
+
+**증상:**
+```
+AttributeError: 'Client' object has no attribute 'file_search_stores'
+```
+
+**원인:** `google-genai` 버전이 1.50.0 미만
+
+**해결:**
+```bash
+# 현재 버전 확인
+pip show google-genai
+
+# 1.50.0 미만이면 업그레이드
+pip install --upgrade google-genai
+
+# 백엔드 재시작
+cd backend
+python main.py
+```
+
+**설명:**
+- File Search Store 기능은 `google-genai` 1.50.0 버전부터 지원됩니다
+- 이전 버전에서는 `file_search_stores` 속성이 존재하지 않아 에러가 발생합니다
+- 반드시 `pyproject.toml`에 `google-genai>=1.50.0` 명시 필요
+
+---
+
+#### 2. Gemini 모델 호환성 문제 (중요!)
+
+**증상:**
+```
+400 INVALID_ARGUMENT
+tools[0].tool_type: required one_of 'tool_type' must have one initialized field
+```
+
+**원인:** `gemini-2.0-flash-exp` 모델은 File Search Tool을 지원하지 않음
+
+**해결:**
+File Search 기능을 사용하는 모든 코드에서 모델을 `gemini-2.5-flash`로 변경:
+
+```python
+# ❌ 잘못된 코드 (File Search 미지원 모델)
+client.models.generate_content(
+    model="gemini-2.0-flash-exp",  # 이 모델은 File Search 미지원!
+    contents=message,
+    config=types.GenerateContentConfig(
+        tools=[
+            types.Tool(
+                file_search=types.FileSearch(...)
+            )
+        ]
+    )
+)
+
+# ✅ 올바른 코드
+client.models.generate_content(
+    model="gemini-2.5-flash",  # File Search 지원 모델
+    contents=message,
+    config=types.GenerateContentConfig(
+        tools=[
+            types.Tool(
+                file_search=types.FileSearch(...)
+            )
+        ]
+    )
+)
+```
+
+**수정 필요 파일:**
+1. `backend/file_search_manager.py` (line ~191)
+2. `backend/ai_manager.py` (line ~341, ~362, ~411, ~432)
+
+**File Search 지원 모델:**
+- ✅ `gemini-2.5-flash` (권장)
+- ✅ `gemini-2.5-pro`
+- ✅ `gemini-1.5-pro`
+- ✅ `gemini-1.5-flash`
+- ❌ `gemini-2.0-flash-exp` (File Search 미지원)
+- ❌ `gemini-1.0-pro` (File Search 미지원)
+
+**중요:** 일반 채팅(File Search 미사용)은 모든 Gemini 모델 사용 가능
+
+---
+
+#### 3. Tool 파라미터 명명 규칙
+
+**증상:** File Search Tool 설정 시 에러 발생
+
+**올바른 형식:**
+```python
+# Python SDK는 snake_case 사용
+tools=[
+    types.Tool(
+        file_search=types.FileSearch(  # snake_case
+            file_search_store_names=[store_name]  # snake_case
+        )
+    )
+]
+```
+
+**잘못된 형식:**
+```python
+# ❌ camelCase는 작동하지 않음
+tools=[
+    types.Tool(
+        fileSearch=types.FileSearch(  # ❌
+            fileSearchStoreNames=[store_name]  # ❌
+        )
+    )
+]
+```
+
+**설명:**
+- Google Gemini Python SDK는 `snake_case` 명명 규칙을 따릅니다
+- REST API 문서는 `camelCase`를 사용하지만, Python SDK는 다릅니다
+- 반드시 `file_search`, `file_search_store_names` 사용
+
+---
+
+### 🐛 일반적인 문제 해결
+
+#### 4. File Search Store가 초기화되지 않음
 
 **증상:** 업로드한 파일이 AI에게 전달되지 않음
 
@@ -694,14 +920,48 @@ python main.py
 ```bash
 # 백엔드 실행 로그 확인:
 # 아래 메시지가 표시되어야 정상:
-✅ 새로운 File Search Store 생성: file_search_stores/...
+✅ Gemini File Search Manager 초기화 완료
+✅ 새로운 File Search Store 생성: fileSearchStores/...
 ```
 
-권장사항:
-- 파일 업로드 후 문서 목록 확인
+**권장사항:**
+- 파일 업로드 후 문서 목록 확인 (📚 문서 관리 버튼)
 - `GET /api/documents` 호출하여 문서 목록 확인
+- `backend/data/file_search_metadata.json` 파일 생성 확인
 
-### 2. API 키 설정 오류
+#### 5. 파일 업로드 시 Operation 완료 대기 실패
+
+**증상:**
+```
+'UploadToFileSearchStoreOperation' object has no attribute 'result'
+```
+
+**원인:** SDK 버전에 따라 operation 완료 확인 방법이 다름
+
+**해결:**
+```python
+# ❌ 잘못된 코드
+uploaded_file = operation.result()  # result() 메서드 없음
+
+# ✅ 올바른 코드 (polling 방식)
+while not operation.done:
+    await asyncio.sleep(2)
+    operation = await loop.run_in_executor(
+        None,
+        lambda: self.client.operations.get(operation)
+    )
+
+# 완료 후 response 접근
+response = operation.response
+file_name = response.document_name
+```
+
+**설명:**
+- `operation.result()`는 지원되지 않음
+- `while not operation.done` 루프로 완료 대기
+- `operation.response`로 업로드 결과 접근
+
+#### 6. API 키 설정 오류
 
 **증상:** "API 키를 확인해주세요" 오류
 
@@ -713,13 +973,79 @@ cat backend/.env
 # API 키가 올바른지 확인
 # 잘못된 예시:
 GEMINI_API_KEY=AIzaSy...  # ✅ 올바름
-GEMINI_API_KEY= AIzaSy... # ❌ 공백 있음
+GEMINI_API_KEY= AIzaSy... # ❌ 앞에 공백 있음
+GEMINI_API_KEY="AIzaSy..." # ❌ 따옴표 제거 필요
 ```
 
-### 3. 이미지가 표시되지 않음
+**주의사항:**
+- API 키 앞뒤로 공백이 있으면 안 됩니다
+- 따옴표를 사용하지 마세요
+- `=` 기호 뒤에 바로 API 키 입력
+
+#### 7. Gemini만 에러, GPT/Claude는 정상
+
+**증상:** GPT와 Claude는 RAG 정보를 읽지만 Gemini만 에러 발생
+
+**원인:**
+1. Gemini 모델이 File Search 미지원 (→ 문제 #2 참고)
+2. Tool 파라미터 명명 오류 (→ 문제 #3 참고)
+
+**진단:**
+```bash
+# Gemini 일반 호출 테스트 (File Search 없이)
+cd backend
+python -c "
+from google import genai
+import os
+client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
+response = client.models.generate_content(
+    model='gemini-2.5-flash',
+    contents='Hello'
+)
+print(response.text)
+"
+```
+
+일반 호출이 성공하면 → File Search 설정 문제
+일반 호출도 실패하면 → API 키 또는 네트워크 문제
+
+#### 8. RAG 검색 결과가 비어있음
+
+**증상:** `searched_context`가 `None` 또는 빈 문자열
+
+**원인:**
+- 파일이 아직 인덱싱 중
+- 질문과 관련된 내용이 문서에 없음
+- 검색 쿼리가 너무 구체적
+
+**해결:**
+```python
+# file_search_manager.py의 get_context() 확인
+# 검색 쿼리 조정:
+search_query = f"다음 질문과 관련된 정보를 문서에서 찾아서 원문 그대로 인용해주세요: {query}"
+
+# temperature를 낮춰서 정확도 향상
+config=types.GenerateContentConfig(
+    temperature=0.1,  # 낮을수록 정확
+    max_output_tokens=2000
+)
+```
+
+**권장사항:**
+- 파일 업로드 후 2-3초 대기
+- 더 일반적인 질문으로 시도
+- 여러 키워드로 검색 시도
+
+#### 9. 이미지가 표시되지 않음
 
 **해결:**
 ```bash
+# AI 이미지 파일 경로 확인
+ls frontend/public/ai_image/
+# ChatGPT_Image.png
+# Claude_Image.png
+# Gemini_Image.png
+
 # 프론트엔드 재시작
 cd frontend
 npm run dev
@@ -727,42 +1053,156 @@ npm run dev
 # 브라우저 캐시 강제 새로고침 (Ctrl+Shift+R)
 ```
 
-### 4. CORS 오류
+#### 10. CORS 오류
+
+**증상:** 프론트엔드에서 백엔드 API 호출 실패
 
 **해결:**
 ```python
 # backend/main.py에서 CORS 설정 확인
-allow_origins=["*"]  # 모든 출처 허용
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # 모든 출처 허용
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 ```
 
 ---
 
-## 기술 스택 정보
+### 🔍 디버깅 팁
 
-### 백엔드 기술
-
-**백엔드:**
-- FastAPI
-- Google Gemini API (File Search Store)
-- OpenAI API
-- Anthropic API
-- Python 3.12+
-
-**프론트엔드:**
-- React 18
-- TypeScript
-- Vite
-- Axios
-- React Markdown
-
-### 의존성
+#### 로그 활성화
+백엔드 실행 시 자세한 로그를 확인하세요:
 
 ```bash
-# 백엔드
-backend/pyproject.toml
+cd backend
+python main.py
+```
 
-# 프론트엔드
-frontend/package.json
+주요 로그 메시지:
+```
+✅ OpenAI (GPT) 연결 완료
+✅ Anthropic (Claude) 연결 완료
+✅ Google (Gemini) 연결 완료
+✅ Gemini File Search Manager 초기화 완료
+✅ 기존 File Search Store 로드: fileSearchStores/...
+📤 File Search Store에 파일 업로드 중: ...
+⏳ 파일 처리 중 (청킹, 임베딩, 인덱싱)...
+✅ File Search Store에 파일 업로드 완료: ...
+🔍 RAG 검색 완료 (쿼리: ...)
+📝 추출된 컨텍스트: ...
+```
+
+#### 문제 발생 시 체크리스트
+
+1. **백엔드 로그 확인**: 에러 메시지 전체 내용 확인
+2. **API 키 확인**: `.env` 파일에 올바른 API 키 입력되었는지
+3. **SDK 버전 확인**: `pip show google-genai` (≥ 1.50.0)
+4. **모델 확인**: File Search 사용 시 `gemini-2.5-flash` 사용
+5. **파일 업로드 확인**: 문서 관리 화면에서 파일 목록 확인
+6. **네트워크 확인**: API 접근 가능한지 (방화벽, VPN 등)
+
+#### 에러별 원인 진단
+
+| 에러 메시지 | 원인 | 해결책 |
+|----------|-----|------|
+| `'Client' object has no attribute 'file_search_stores'` | google-genai 버전 1.50.0 미만 | `pip install --upgrade google-genai` |
+| `tools[0].tool_type: required one_of...` | Gemini 모델이 File Search 미지원 | 모델을 `gemini-2.5-flash`로 변경 |
+| `'UploadToFileSearchStoreOperation' object has no attribute 'result'` | operation 완료 확인 방식 오류 | `while not operation.done` 루프 사용 |
+| `INVALID_ARGUMENT` | Tool 파라미터 명명 오류 | `file_search`, `file_search_store_names` 사용 |
+| `API 키를 확인해주세요` | .env 파일 API 키 오류 | 공백 제거, 따옴표 제거 |
+
+---
+
+### 📚 참고 자료
+
+**공식 문서:**
+- [Google Gemini File Search](https://ai.google.dev/gemini-api/docs/file-search)
+- [Google GenAI Python SDK](https://github.com/google/generative-ai-python)
+- [OpenAI API Documentation](https://platform.openai.com/docs)
+- [Anthropic Claude API](https://docs.anthropic.com)
+
+**주요 변경 사항:**
+- 2025년 1월: `google-genai` 1.50.0 릴리스 (File Search Store 기능 추가)
+- 2025년 1월: `gemini-2.5-flash` 모델 File Search 지원 확인
+
+---
+
+### 💡 개발 시 권장사항
+
+1. **버전 고정**: `pyproject.toml`에 정확한 버전 명시
+   ```toml
+   google-genai>=1.50.0
+   ```
+
+2. **에러 핸들링**: File Search 오류 시 일반 모드로 폴백
+   ```python
+   try:
+       # File Search 시도
+   except Exception as e:
+       print(f"File Search 오류: {e}")
+       # 일반 모드로 폴백
+   ```
+
+3. **모델 검증**: File Search 사용 시 지원 모델 목록 확인
+   ```python
+   SUPPORTED_MODELS = ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-1.5-pro"]
+   ```
+
+4. **로그 추가**: 디버깅을 위한 상세 로그
+   ```python
+   print(f"🔍 File Search Store 사용: {store_name}")
+   print(f"📝 추출된 컨텍스트: {searched_text[:200]}...")
+   ```
+
+---
+
+## 기술 스택
+
+### 백엔드
+- **프레임워크**: FastAPI (비동기 웹 서버)
+- **AI API**:
+  - Google Gemini API (`google-genai>=1.50.0`) - File Search Store 제공
+  - OpenAI API (`openai>=1.58.0`) - GPT-4o
+  - Anthropic API (`anthropic>=0.42.0`) - Claude Sonnet 4
+- **언어**: Python 3.11+
+- **비동기 처리**: asyncio, run_in_executor
+- **파일 처리**: python-multipart, Pillow
+
+### 프론트엔드
+- **프레임워크**: React 18 + TypeScript
+- **빌드 도구**: Vite
+- **HTTP 클라이언트**: Axios
+- **마크다운 렌더링**: React Markdown
+- **스타일링**: CSS Modules
+
+### 인프라
+- **RAG 시스템**: Google File Search Store (관리형 벡터 DB)
+- **임베딩**: Gemini Embedding API (자동, text-embedding-004)
+- **스트리밍**: Server-Sent Events (SSE)
+- **데이터 저장**:
+  - File Search Store (클라우드)
+  - 로컬 JSON (메타데이터)
+
+### 주요 의존성
+
+**백엔드** (`backend/pyproject.toml`):
+```toml
+google-genai>=1.50.0    # File Search Store 필수
+openai>=1.58.0
+anthropic>=0.42.0
+fastapi>=0.115.0
+uvicorn>=0.32.0
+```
+
+**프론트엔드** (`frontend/package.json`):
+```json
+"react": "^18.3.1"
+"typescript": "^5.6.2"
+"vite": "^6.0.1"
+"axios": "^1.7.9"
 ```
 
 ---
@@ -771,3 +1211,12 @@ frontend/package.json
 
 MIT License
 
+---
+
+## 🙏 참고 자료
+
+- [OpenAI API](https://platform.openai.com/docs)
+- [Anthropic API](https://docs.anthropic.com/)
+- [Gemini API](https://ai.google.dev/)
+- [FastAPI](https://fastapi.tiangolo.com/)
+- [React](https://react.dev/)

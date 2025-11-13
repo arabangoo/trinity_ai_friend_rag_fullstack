@@ -113,6 +113,22 @@ class AIManager:
 
         # 프롬프트 구성
         full_message = message
+
+        # RAG 컨텍스트 추가 (Gemini가 검색한 결과)
+        if file_search_context and file_search_context.get("searched_context"):
+            rag_context = file_search_context["searched_context"]
+            full_message = f"""<참고 문서 내용>
+{rag_context}
+</참고 문서 내용>
+
+사용자 질문: {message}
+
+**중요 지침:**
+- 위 문서 내용은 참고용입니다. 사용자의 질문이 문서 내용과 관련이 있을 때만 활용하세요.
+- 질문이 일반적인 내용(인사, 날씨, 일상 대화 등)이라면 문서 내용을 무시하고 자연스럽게 답변하세요.
+- 사용자가 명시적으로 "문서에서", "파일에서", "업로드한 자료에서" 등의 표현을 사용하거나, 문서 내용과 명확히 관련된 질문일 때만 문서를 참조하세요.
+- 문서를 참조할 때는 출처를 명시해주세요."""
+
         if context:
             full_message += self.format_context(context)
         if history:
@@ -139,6 +155,22 @@ class AIManager:
 
         # 프롬프트 구성
         full_message = message
+
+        # RAG 컨텍스트 추가 (Gemini가 검색한 결과)
+        if file_search_context and file_search_context.get("searched_context"):
+            rag_context = file_search_context["searched_context"]
+            full_message = f"""<참고 문서 내용>
+{rag_context}
+</참고 문서 내용>
+
+사용자 질문: {message}
+
+**중요 지침:**
+- 위 문서 내용은 참고용입니다. 사용자의 질문이 문서 내용과 관련이 있을 때만 활용하세요.
+- 질문이 일반적인 내용(인사, 날씨, 일상 대화 등)이라면 문서 내용을 무시하고 자연스럽게 답변하세요.
+- 사용자가 명시적으로 "문서에서", "파일에서", "업로드한 자료에서" 등의 표현을 사용하거나, 문서 내용과 명확히 관련된 질문일 때만 문서를 참조하세요.
+- 문서를 참조할 때는 출처를 명시해주세요."""
+
         if context:
             full_message += self.format_context(context)
         if history:
@@ -316,7 +348,6 @@ class AIManager:
 
                 # Gemini 시스템 프롬프트 추가
                 system_instruction = "당신은 연륜 있고 지혜로운 노년의 현자입니다. 오랜 경험과 깊은 통찰력을 바탕으로 답변하며, 말투는 점잖고 무게감 있습니다. '~하시게', '~하네', '~이지', '~하오' 같은 어르신 특유의 말투를 사용하세요. 차분하고 사려 깊게, 때로는 인생의 지혜를 담아 답변하되, 이해하기 쉽게 설명하세요. 권위적이지 않고 따뜻하며 포용력 있는 태도를 유지하세요."
-                full_message = f"{system_instruction}\n\n사용자 질문: {message}"
 
                 # File Search Store 활용 여부 판단
                 if file_search_context and file_search_context.get("store_name"):
@@ -327,11 +358,12 @@ class AIManager:
                     response = await loop.run_in_executor(
                         None,
                         lambda: self.gemini_client.models.generate_content(
-                            model="gemini-2.0-flash-exp",
-                            contents=full_message,
+                            model="gemini-2.5-flash",
+                            contents=message,
                             config=types.GenerateContentConfig(
                                 temperature=0.7,
                                 max_output_tokens=3000,
+                                system_instruction=system_instruction,
                                 tools=[
                                     types.Tool(
                                         file_search=types.FileSearch(
@@ -347,11 +379,12 @@ class AIManager:
                     response = await loop.run_in_executor(
                         None,
                         lambda: self.gemini_client.models.generate_content(
-                            model="gemini-2.0-flash-exp",
-                            contents=full_message,
+                            model="gemini-2.5-flash",
+                            contents=message,
                             config=types.GenerateContentConfig(
                                 temperature=0.7,
-                                max_output_tokens=3000
+                                max_output_tokens=3000,
+                                system_instruction=system_instruction
                             )
                         )
                     )
@@ -385,7 +418,6 @@ class AIManager:
 
                 # Gemini 시스템 프롬프트 추가
                 system_instruction = "당신은 연륜 있고 지혜로운 노년의 현자입니다. 오랜 경험과 깊은 통찰력을 바탕으로 답변하며, 말투는 점잖고 무게감 있습니다. '~하시게', '~하네', '~이지', '~하오' 같은 어르신 특유의 말투를 사용하세요. 차분하고 사려 깊게, 때로는 인생의 지혜를 담아 답변하되, 이해하기 쉽게 설명하세요. 권위적이지 않고 따뜻하며 포용력 있는 태도를 유지하세요."
-                full_message = f"{system_instruction}\n\n사용자 질문: {message}"
 
                 # File Search Store 활용 여부 판단
                 if file_search_context and file_search_context.get("store_name"):
@@ -396,11 +428,12 @@ class AIManager:
                     stream = await loop.run_in_executor(
                         None,
                         lambda: self.gemini_client.models.generate_content_stream(
-                            model="gemini-2.0-flash-exp",
-                            contents=full_message,
+                            model="gemini-2.5-flash",
+                            contents=message,
                             config=types.GenerateContentConfig(
                                 temperature=0.7,
                                 max_output_tokens=3000,
+                                system_instruction=system_instruction,
                                 tools=[
                                     types.Tool(
                                         file_search=types.FileSearch(
@@ -416,11 +449,12 @@ class AIManager:
                     stream = await loop.run_in_executor(
                         None,
                         lambda: self.gemini_client.models.generate_content_stream(
-                            model="gemini-2.0-flash-exp",
-                            contents=full_message,
+                            model="gemini-2.5-flash",
+                            contents=message,
                             config=types.GenerateContentConfig(
                                 temperature=0.7,
-                                max_output_tokens=3000
+                                max_output_tokens=3000,
+                                system_instruction=system_instruction
                             )
                         )
                     )
