@@ -4,6 +4,8 @@
 
 3개의 최신 AI (GPT, Claude, Gemini)가 동시에 답변하며 파일 기반 지능형 RAG 검색을 제공합니다.
 
+<img width="2400" height="1400" alt="image_1" src="https://github.com/user-attachments/assets/7e152d79-4194-48ce-9488-5a6bb140d586" />
+
 ## 🎯 핵심 특징
 
 - 🤖 **멀티 AI 동시 응답**: GPT, Claude, Gemini가 같은 질문에 각자의 스타일로 답변
@@ -61,6 +63,10 @@ npm run dev
 - ✅ **비용 최적화** (저장소 유지비 무료, 인덱싱만 $0.15/1M 토큰)
 - ✅ **멀티 AI 공유**: Gemini가 검색한 결과를 GPT/Claude도 활용
 - ✅ **문서 관리**: 웹 UI에서 문서 업로드/삭제 가능
+
+<img width="2400" height="1400" alt="rag_1" src="https://github.com/user-attachments/assets/4d7b6a3e-acee-479d-b4f4-ab3908415c9b" />   
+<img width="2400" height="1400" alt="rag_2" src="https://github.com/user-attachments/assets/3c12dfbf-5e99-4a56-8847-7dd17b487c8d" />   
+<img width="2400" height="1400" alt="rag_3" src="https://github.com/user-attachments/assets/acb4cc2c-0990-4219-9354-e0af606c911c" />   
 
 ### 3. 실시간 스트리밍 응답
 - Server-Sent Events (SSE)로 실시간 스트리밍
